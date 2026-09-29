@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getAirports } from "../../common/api/airportApi";
 import type { Airport, FlightSearchState } from "../../common/types/flight";
 import { Button } from "../common/Button";
 import { AirportModal } from "./AirportModal";
@@ -21,7 +22,7 @@ function AirportField({
   swap,
 }: {
   label: string;
-  airport: Airport;
+  airport: Airport | null;
   onClick: () => void;
   swap?: boolean;
 }) {
@@ -32,13 +33,13 @@ function AirportField({
       className="relative min-w-0 flex-1 px-4 py-3 text-left hover:bg-slate-50"
     >
       <span className="block text-xs text-slate-500">
-        {label} - {airport.code}
+        {label} - {airport?.code ?? "Select airport"}
       </span>
       <span className="mt-1 block truncate text-lg font-bold text-slate-900">
-        {airport.city}
+        {airport?.cityDetails.name ?? "Select airport"}
       </span>
       <span className="block truncate text-xs text-slate-500">
-        {airport.name}
+        {airport?.name ?? "Choose an airport"}
       </span>
       {swap && (
         <span className="absolute -right-3 top-1/2 z-10 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full border border-blue-500 bg-white text-sm text-blue-600">
@@ -50,26 +51,56 @@ function AirportField({
 }
 export function FlightSearch() {
   const [open, setOpen] = useState<OpenPanel>(null);
+  const [airports, setAirports] = useState<Airport[]>([]);
+  const [isLoadingAirports, setIsLoadingAirports] = useState(true);
+  const [airportError, setAirportError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [search, setSearch] = useState<FlightSearchState>({
-    from: {
-      city: "New Delhi",
-      code: "DEL",
-      name: "Indira Gandhi International Airport",
-      country: "IN",
-    },
-    to: {
-      city: "Hyderabad",
-      code: "HYD",
-      name: "Rajiv Gandhi International Airport",
-      country: "IN",
-    },
+    from: null,
+    to: null,
     departureDate: new Date(2026, 9, 2),
     travellers: { adults: 2, children: 0, infants: 0 },
     cabinClass: "Economy",
     tripType: "oneWay",
   });
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAirports = async () => {
+      try {
+        const loadedAirports = await getAirports();
+        if (isMounted) setAirports(loadedAirports);
+      } catch {
+        if (isMounted)
+          setAirportError("Unable to load airports. Please try again.");
+      } finally {
+        if (isMounted) setIsLoadingAirports(false);
+      }
+    };
+
+    void loadAirports();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   const selectAirport = (field: "from" | "to", airport: Airport) => {
     setSearch((value) => ({ ...value, [field]: airport }));
+    setOpen(null);
+  };
+  const handleSearch = () => {
+    if (!search.from) {
+      setValidationError("Please select departure airport.");
+      return;
+    }
+    if (!search.to) {
+      setValidationError("Please select destination airport.");
+      return;
+    }
+    if (search.from.id === search.to.id) {
+      setValidationError("Source and destination airport cannot be the same.");
+      return;
+    }
+
     setOpen(null);
   };
   const date = formatDate(search.departureDate);
@@ -146,6 +177,9 @@ export function FlightSearch() {
         {open === "from" && (
           <AirportModal
             title="origin"
+            airports={airports}
+            isLoading={isLoadingAirports}
+            error={airportError}
             onClose={() => setOpen(null)}
             onSelect={(airport) => selectAirport("from", airport)}
           />
@@ -153,6 +187,9 @@ export function FlightSearch() {
         {open === "to" && (
           <AirportModal
             title="destination"
+            airports={airports}
+            isLoading={isLoadingAirports}
+            error={airportError}
             onClose={() => setOpen(null)}
             onSelect={(airport) => selectAirport("to", airport)}
           />
@@ -210,11 +247,36 @@ export function FlightSearch() {
         <Button
           type="button"
           className="w-full bg-yellow-400 text-slate-900 hover:bg-yellow-300 lg:w-64"
-          onClick={() => setOpen(null)}
+          onClick={handleSearch}
         >
           Search flights
         </Button>
       </div>
+      {validationError && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="flight-search-validation-title"
+          className="fixed inset-0 z-40 grid place-items-center bg-slate-900/30 px-4"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+            <h2
+              id="flight-search-validation-title"
+              className="text-lg font-bold text-slate-900"
+            >
+              Invalid Flight Search
+            </h2>
+            <p className="mt-3 text-sm text-slate-600">{validationError}</p>
+            <Button
+              type="button"
+              className="mt-5 bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => setValidationError(null)}
+            >
+              OK
+            </Button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
