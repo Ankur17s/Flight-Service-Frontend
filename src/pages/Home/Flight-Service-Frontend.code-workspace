@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"name": "Flight-Service-Frontend",
+			"path": "../../.."
+		},
+		{
+			"name": "API_Gateway",
+			"path": "../../../../API_Gateway"
+		},
+		{
+			"path": "../../../../Flight_Service"
+		},
+		{
+			"path": "../../../../Flight-Booking-Service"
+		}
+	],
+	"settings": {}
+}
