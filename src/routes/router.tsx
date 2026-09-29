@@ -12,7 +12,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={hasAuthToken() ? "/home" : "/login"} replace />,
+        element: <Navigate to={hasAuthToken() ? "/flight-search" : "/login"} replace />,
       },
       {
         path: "login",
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           {
-            path: "home",
+            path: "flight-search",
             element: <Home />,
           },
         ],

@@ -50,7 +50,7 @@ export function LoginForm() {
       if (!response.data)
         throw new Error("The server did not return an access token.");
       saveAuthToken(response.data);
-      navigate("/home", { replace: true });
+      navigate("/flight-search", { replace: true });
     } catch (error) {
       setApiError(
         error instanceof Error
