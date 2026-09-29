@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAirports } from "../../common/api/airportApi";
 import type { Airport, FlightSearchState } from "../../common/types/flight";
 import { Button } from "../common/Button";
@@ -50,6 +51,7 @@ function AirportField({
   );
 }
 export function FlightSearch() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState<OpenPanel>(null);
   const [airports, setAirports] = useState<Airport[]>([]);
   const [isLoadingAirports, setIsLoadingAirports] = useState(true);
@@ -59,7 +61,7 @@ export function FlightSearch() {
     from: null,
     to: null,
     departureDate: new Date(2026, 9, 2),
-    travellers: { adults: 2, children: 0, infants: 0 },
+    travellers: { adults: 1, children: 0, infants: 0 },
     cabinClass: "Economy",
     tripType: "oneWay",
   });
@@ -101,7 +103,7 @@ export function FlightSearch() {
       return;
     }
 
-    setOpen(null);
+    navigate("/flight-search/travel", { state: { search } });
   };
   const date = formatDate(search.departureDate);
   return (
