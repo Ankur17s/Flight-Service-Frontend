@@ -68,12 +68,7 @@ export default function FlightTravel() {
           tripDate: tripDate!,
         };
 
-        console.log("Flight API params:", params);
-
         const response = await searchFlights(params);
-
-        console.log("Flight API response:", response);
-
         setFlights(response.data);
 
         // Keep route details even when a later search returns no flights.
@@ -89,7 +84,6 @@ export default function FlightTravel() {
         }
       } catch (error) {
         console.error("Flight API error:", error);
-
         setFlights([]);
       }
     };
@@ -152,7 +146,11 @@ export default function FlightTravel() {
         ) : (
           <div className="mt-4">
             {flights.map((flight) => (
-              <FlightCard key={flight.id} flight={flight} />
+              <FlightCard
+                key={flight.id}
+                flight={flight}
+                travellers={Number(travellers)}
+              />
             ))}
           </div>
         )}

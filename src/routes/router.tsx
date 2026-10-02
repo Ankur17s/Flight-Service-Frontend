@@ -5,6 +5,7 @@ import Home from "../pages/Home/Home";
 import FlightTravel from "../pages/FlightSearch/FlightTravel";
 import Login from "../pages/Login/Login";
 import Signup from "../pages/Signup/Signup";
+import FlightInfo from "../components/flight/FlightResults/FlightInfo";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -13,7 +14,9 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={hasAuthToken() ? "/flight-search" : "/login"} replace />,
+        element: (
+          <Navigate to={hasAuthToken() ? "/flight-search" : "/login"} replace />
+        ),
       },
       {
         path: "login",
@@ -33,6 +36,10 @@ export const router = createBrowserRouter([
           {
             path: "flight-search/travel",
             element: <FlightTravel />,
+          },
+          {
+            path: "flight-search/travel/info",
+            element: <FlightInfo />,
           },
         ],
       },

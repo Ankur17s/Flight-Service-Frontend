@@ -1,8 +1,16 @@
 import type { SearchedFlight } from "../../../common/types/flight";
+import { useNavigate } from "react-router-dom";
 
-export function FlightCard({ flight }: { flight: SearchedFlight }) {
+export function FlightCard({
+  flight,
+  travellers,
+}: {
+  flight: SearchedFlight;
+  travellers: number;
+}) {
   const departure = new Date(flight.departureTime);
   const arrival = new Date(flight.arrivalTime);
+  const navigate = useNavigate();
 
   const durationInMinutes =
     (arrival.getTime() - departure.getTime()) / (1000 * 60);
@@ -23,8 +31,21 @@ export function FlightCard({ flight }: { flight: SearchedFlight }) {
     minute: "2-digit",
     hour12: true,
   });
+
+const handleFlightClick = () => {
+  navigate("/flight-search/travel/info", {
+    state: {
+      flight,
+      travellers,
+    },
+  });
+};
+
   return (
-    <article className="border-b border-slate-100 px-3 py-4 last:border-b-0 sm:px-2">
+    <article
+      onClick={handleFlightClick}
+      className="cursor-pointer border-b border-slate-100 px-3 py-4 last:border-b-0 sm:px-2"
+    >
       <div className="grid grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-12">
         <div className="text-center">
           <div
