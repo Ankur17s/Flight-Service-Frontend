@@ -16,6 +16,7 @@ const travellerCount = (state: FlightSearchState) =>
   state.travellers.adults +
   state.travellers.children +
   state.travellers.infants;
+
 function AirportField({
   label,
   airport,
@@ -60,11 +61,19 @@ export function FlightSearch() {
   const [search, setSearch] = useState<FlightSearchState>({
     from: null,
     to: null,
-    departureDate: new Date(2026, 9, 2),
+    departureDate: null,
     travellers: { adults: 1, children: 0, infants: 0 },
     cabinClass: "Economy",
     tripType: "oneWay",
   });
+
+  const formatDateForApi = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
   useEffect(() => {
     let isMounted = true;
 
@@ -98,14 +107,28 @@ export function FlightSearch() {
       setValidationError("Please select destination airport.");
       return;
     }
+    if (!search.departureDate) {
+      setValidationError("Please select departure date.");
+      return;
+    }
     if (search.from.id === search.to.id) {
       setValidationError("Source and destination airport cannot be the same.");
       return;
     }
-
-    navigate("/flight-search/travel", { state: { search } });
+    const travellers = travellerCount(search);
+    const searchParams = new URLSearchParams({
+      trips: `${search.from.code}-${search.to.code}`,
+      price: "0-100000",
+      travellers: String(travellers),
+      sort: "",
+      tripDate: formatDateForApi(search.departureDate),
+    });
+    console.log("search params -->>", searchParams.toString());
+    navigate(`/flight-search/travel?${searchParams.toString()}`);
   };
-  const date = formatDate(search.departureDate);
+
+  const date = search.departureDate ? formatDate(search.departureDate) : null;
+
   return (
     <section className="relative mx-auto w-full max-w-5xl rounded-2xl bg-white p-4 shadow-xl shadow-slate-900/15 ring-1 ring-slate-200 sm:p-5">
       <div className="mb-5 flex gap-6 text-sm font-semibold">
@@ -150,8 +173,20 @@ export function FlightSearch() {
           className="border-t border-slate-200 px-4 py-3 text-left hover:bg-slate-50 lg:border-l lg:border-t-0"
         >
           <span className="block text-xs text-blue-600">Departure</span>
-          <span className="mt-1 block text-base font-bold">{date.day} Oct</span>
-          <span className="text-xs text-slate-500">{date.weekday}</span>
+          <span className="mt-1 block text-base font-bold">
+            {date
+              ? `${date.day} ${search.departureDate?.toLocaleDateString(
+                  "en-IN",
+                  {
+                    month: "short",
+                  },
+                )}`
+              : "Select date"}
+          </span>
+
+          <span className="text-xs text-slate-500">
+            {date?.weekday ?? "Choose your departure date"}
+          </span>
         </button>
         <button
           type="button"
@@ -217,35 +252,6 @@ export function FlightSearch() {
         )}
       </div>
       <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-        {/* <label className="flex items-center gap-3 rounded-xl border border-blue-200 px-3 py-2 text-sm">
-          <input type="checkbox" className="h-5 w-5 rounded" />
-          <span>
-            <b className="block">
-              Save additional 10%{" "}
-              <em className="ml-1 rounded bg-orange-500 px-1.5 py-0.5 text-[10px] not-italic text-white">
-                NEW
-              </em>
-            </b>
-            <small className="text-emerald-600">
-              If you are traveling for work
-            </small>
-          </span>
-        </label>
-        <span className="text-xs text-slate-500">Special fares (Optional)</span>
-        <div className="flex flex-1 gap-2 overflow-x-auto">
-          <span className="rounded-lg border px-2 py-1 text-xs">
-            Student
-            <br />
-            <b className="font-normal text-emerald-600">
-              Extra baggage, discounts
-            </b>
-          </span>
-          <span className="rounded-lg border px-2 py-1 text-xs">
-            Senior Citizen
-            <br />
-            <b className="font-normal text-emerald-600">Up to ₹600 OFF</b>
-          </span>
-        </div> */}
         <Button
           type="button"
           className="w-full bg-yellow-400 text-slate-900 hover:bg-yellow-300 lg:w-64"
