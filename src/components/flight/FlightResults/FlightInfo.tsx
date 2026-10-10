@@ -78,17 +78,13 @@ export default function FlightInfo() {
             ←
           </button>
 
-          <h1 className="text-lg font-semibold">
-            Flight Details
-          </h1>
+          <h1 className="text-lg font-semibold">Flight Details</h1>
         </div>
 
         {/* Flight details */}
         <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
           <div className="bg-blue-700 px-4 py-4 text-white">
-            <p className="text-sm font-semibold">
-              {flight.flightNumber}
-            </p>
+            <p className="text-sm font-semibold">{flight.flightNumber}</p>
 
             <p className="mt-1 text-xs text-blue-100">
               {flight.airplaneDetail.modelNumber}
@@ -99,9 +95,7 @@ export default function FlightInfo() {
             <div className="flex items-center justify-between gap-4">
               {/* Departure */}
               <div>
-                <p className="text-xs text-slate-500">
-                  {departureDate}
-                </p>
+                <p className="text-xs text-slate-500">{departureDate}</p>
 
                 <p className="mt-1 text-xl font-semibold">
                   {flight.departureAirport.code} {departureTime}
@@ -118,22 +112,16 @@ export default function FlightInfo() {
 
               {/* Duration */}
               <div className="min-w-[80px] text-center">
-                <p className="text-sm text-slate-500">
-                  {duration}
-                </p>
+                <p className="text-sm text-slate-500">{duration}</p>
 
                 <div className="my-2 border-t border-slate-300" />
 
-                <p className="text-xs text-slate-500">
-                  Non-stop
-                </p>
+                <p className="text-xs text-slate-500">Non-stop</p>
               </div>
 
               {/* Arrival */}
               <div className="text-right">
-                <p className="text-xs text-slate-500">
-                  {departureDate}
-                </p>
+                <p className="text-xs text-slate-500">{departureDate}</p>
 
                 <p className="mt-1 text-xl font-semibold">
                   {arrivalTime} {flight.arrivalAirport.code}
@@ -155,9 +143,7 @@ export default function FlightInfo() {
         <div className="mt-5 rounded-xl border border-slate-200 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">
-                Fare
-              </p>
+              <p className="text-sm text-slate-500">Fare</p>
 
               <p className="mt-1 text-2xl font-bold">
                 ₹{totalFare.toLocaleString("en-IN")}
@@ -172,6 +158,14 @@ export default function FlightInfo() {
             <button
               type="button"
               className="rounded-lg bg-blue-600 px-8 py-3 font-semibold text-white hover:bg-blue-700"
+              onClick={() =>
+                navigate("/flight-search/travel/travellers-information", {
+                  state: {
+                    flight,
+                    travellers,
+                  },
+                })
+              }
             >
               Continue
             </button>
