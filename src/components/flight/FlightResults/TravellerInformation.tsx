@@ -53,6 +53,8 @@ export default function TravellersInformation() {
 
   const [continueError, setContinueError] = useState("");
 
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
   if (!state) {
     return (
       <main className="min-h-screen bg-white px-4 py-6">
@@ -77,6 +79,36 @@ export default function TravellersInformation() {
   const { flight, travellers } = state;
 
   const totalFare = flight.price * travellers;
+
+  const departure = new Date(flight.departureTime);
+  const arrival = new Date(flight.arrivalTime);
+
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+  const formatTravelDate = (date: Date) =>
+    date.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+
+  const durationInMinutes = Math.max(
+    0,
+    Math.round((arrival.getTime() - departure.getTime()) / 60000),
+  );
+
+  const duration = `${Math.floor(durationInMinutes / 60)}h ${
+    durationInMinutes % 60
+  }m`;
+
+  const selectedAdults = adults.filter((adult) =>
+    selectedAdultIds.includes(adult.id),
+  );
 
   const openAdultModal = () => {
     setAdultFirstName("");
@@ -207,6 +239,7 @@ export default function TravellersInformation() {
     console.log("Contact:", contact);
 
     // Next page will be added here.
+    setShowReviewModal(true);
   };
 
   return (
@@ -389,7 +422,7 @@ export default function TravellersInformation() {
             <Button
               type="button"
               onClick={handleContinue}
-              className="w-auto min-w-[164px] bg-amber-400 text-slate-900 hover:bg-amber-300 focus:ring-amber-300"
+              className="w-auto max-w-41! text-slate-900"
             >
               Continue
             </Button>
@@ -473,6 +506,93 @@ export default function TravellersInformation() {
                 Done
               </Button>
             </div>
+          </div>
+        </Modal>
+      )}
+      {showReviewModal && (
+        <Modal
+          onClose={() => setShowReviewModal(false)}
+          className="fixed left-1/2 top-1/2 w-[min(768px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2"
+        >
+          <div className="max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:p-6">
+            {/* Modal heading */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Review your trip</h2>
+
+              <button
+                type="button"
+                onClick={() => setShowReviewModal(false)}
+                aria-label="Close review"
+                className="grid h-8 w-8 place-items-center rounded-full border border-slate-300 text-xl hover:bg-slate-100"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Flight details */}
+            <section className="rounded-xl border border-slate-200 p-4 shadow-sm">
+              <h3 className="text-lg font-semibold">
+                {flight.departureAirport.cityDetails.name} to{" "}
+                {flight.arrivalAirport.cityDetails.name}
+              </h3>
+
+              <p className="mt-1 text-sm text-slate-700">
+                {formatTravelDate(departure)} · {formatTime(departure)} -{" "}
+                {formatTime(arrival)}
+              </p>
+
+              <p className="mt-1 text-sm text-slate-500">
+                {duration}, Non-stop
+              </p>
+
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-amber-100">
+                  ✦
+                </span>
+
+                <span>
+                  {flight.airplaneDetail.modelNumber} · Economy ·{" "}
+                  {flight.flightNumber}
+                </span>
+              </div>
+            </section>
+
+            {/* Selected travellers */}
+            <section className="mt-8">
+              <h3 className="mb-3 text-lg font-semibold">Travellers</h3>
+
+              <div className="space-y-2">
+                {selectedAdults.map((adult) => (
+                  <p key={adult.id} className="text-sm text-slate-800">
+                    {adult.firstName} {adult.lastName}
+                  </p>
+                ))}
+              </div>
+            </section>
+
+            {/* Fare */}
+            <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
+              <div>
+                <p className="text-sm text-slate-500">Total fare</p>
+                <p className="text-lg font-bold">
+                  ₹{totalFare.toLocaleString("en-IN")}
+                </p>
+              </div>
+            </div>
+
+            {/* Confirm */}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                console.log("Confirmed flight:", flight);
+                console.log("Selected travellers:", selectedAdults);
+                console.log("Contact information:", contact);
+              }}
+              className="mt-5 bg-amber-400! text-slate-900! hover:bg-amber-300! focus:ring-amber-300"
+            >
+              Confirm &amp; proceed
+            </Button>
           </div>
         </Modal>
       )}

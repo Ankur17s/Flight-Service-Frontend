@@ -18,7 +18,7 @@ export function Modal({ children, className = "", onClose }: ModalProps) {
     <>
       <button
         aria-label="Close menu"
-        className="fixed inset-0 z-20 cursor-default bg-transparent"
+        className="fixed inset-0 z-20 cursor-default bg-black/50"
         onClick={onClose}
       />
       <section className={`absolute z-30 ${className}`}>{children}</section>
