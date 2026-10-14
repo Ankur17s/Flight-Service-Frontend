@@ -50,3 +50,20 @@ export function hasAuthToken() {
 }
 
 export const clearAuthToken = () => localStorage.removeItem(TOKEN_KEY);
+
+
+export function getLoggedInUserId(): number | null {
+  const token = getAuthToken();
+
+  if (!token || !hasAuthToken()) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    return typeof payload.id === "number" ? payload.id : null;
+  } catch {
+    return null;
+  }
+}

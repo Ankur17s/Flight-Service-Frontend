@@ -6,6 +6,7 @@ import FlightTravel from "../pages/FlightSearch/FlightTravel";
 import Login from "../pages/Login/Login";
 import Signup from "../pages/Signup/Signup";
 import FlightInfo from "../components/flight/FlightResults/FlightInfo";
+import Payment from "../pages/Payment/Payment";
 import TravellersInformation from "../components/flight/FlightResults/TravellerInformation";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
           {
             path: "flight-search/travel/travellers-information",
             element: <TravellersInformation />,
+          },
+          {
+            path: "flight-search/travel/payment",
+            element: <Payment />,
           },
         ],
       },

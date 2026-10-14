@@ -5,6 +5,8 @@ import { getLoggedInUserEmail } from "../../../common/auth/authStorage";
 import { Button } from "../../../components/common/Button";
 import { Input } from "../../../components/common/Input";
 import { Modal } from "../../../components/common/Modal";
+import { createBooking } from "../../../common/api/bookingApi";
+import { getLoggedInUserId } from "../../../common/auth/authStorage";
 
 interface TravellersInformationState {
   flight: SearchedFlight;
@@ -54,6 +56,9 @@ export default function TravellersInformation() {
   const [continueError, setContinueError] = useState("");
 
   const [showReviewModal, setShowReviewModal] = useState(false);
+
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
+  const [bookingError, setBookingError] = useState("");
 
   if (!state) {
     return (
@@ -240,6 +245,46 @@ export default function TravellersInformation() {
 
     // Next page will be added here.
     setShowReviewModal(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (isCreatingBooking) return;
+
+    const userId = getLoggedInUserId();
+
+    if (userId === null) {
+      setBookingError("Your session has expired. Please log in again.");
+      return;
+    }
+
+    setIsCreatingBooking(true);
+    setBookingError("");
+
+    try {
+      const booking = await createBooking({
+        flightId: flight.id,
+        userId,
+        noOfSeats: selectedAdultIds.length,
+      });
+
+      navigate("/flight-search/travel/payment", {
+        state: {
+          booking,
+          flight,
+          travellers,
+          selectedAdults,
+          contact,
+        },
+      });
+    } catch (error) {
+      setBookingError(
+        error instanceof Error
+          ? error.message
+          : "Unable to create booking. Please try again.",
+      );
+    } finally {
+      setIsCreatingBooking(false);
+    }
   };
 
   return (
@@ -584,15 +629,17 @@ export default function TravellersInformation() {
             <Button
               type="button"
               variant="secondary"
-              onClick={() => {
-                console.log("Confirmed flight:", flight);
-                console.log("Selected travellers:", selectedAdults);
-                console.log("Contact information:", contact);
-              }}
+              loading={isCreatingBooking}
+              onClick={handleConfirmBooking}
               className="mt-5 bg-amber-400! text-slate-900! hover:bg-amber-300! focus:ring-amber-300"
             >
               Confirm &amp; proceed
             </Button>
+            {bookingError && (
+              <p role="alert" className="mt-3 text-sm text-red-600">
+                {bookingError}
+              </p>
+            )}
           </div>
         </Modal>
       )}
