@@ -1,9 +1,11 @@
-
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../components/common/Button";
 import type { SearchedFlight } from "../../common/types/flight";
 import type { Booking } from "../../common/api/bookingApi";
+import { makePayment } from "../../common/api/paymentApi";
+import { getLoggedInUserId } from "../../common/auth/authStorage";
+import { Modal } from "../../components/common/Modal";
 
 interface PaymentState {
   booking: Booking;
@@ -28,6 +30,10 @@ export default function Payment() {
 
   const [showFareBreakup, setShowFareBreakup] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
+
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   if (!state) {
     return (
@@ -72,10 +78,48 @@ export default function Payment() {
       hour12: true,
     });
 
-  const handleMakePayment = () => {
-    setPaymentMessage(
-      "Payment processing is not available yet. Your booking has been created, but payment has not been completed.",
-    );
+  const handleMakePayment = async () => {
+    if (isPaying) return;
+
+    const userId = getLoggedInUserId();
+
+    if (userId === null) {
+      setPaymentError("Your session has expired. Please log in again.");
+      return;
+    }
+
+    if (!state.contact?.email) {
+      setPaymentError(
+        "Traveller email is missing. Please go back and add contact information.",
+      );
+      return;
+    }
+
+    setIsPaying(true);
+    setPaymentError("");
+
+    try {
+      const response = await makePayment({
+        bookingId: state.booking.id,
+        userId,
+        totalCost: Number(state.booking.totalCost),
+        email: state.contact.email,
+      });
+
+      if (response.success === false) {
+        throw new Error(response.message || "Payment failed.");
+      }
+
+      setShowSuccessModal(true);
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : "Payment failed. Please try again.",
+      );
+    } finally {
+      setIsPaying(false);
+    }
   };
 
   return (
@@ -179,10 +223,7 @@ export default function Payment() {
 
             <div className="mt-3 space-y-3">
               {selectedAdults.map((adult) => (
-                <div
-                  key={adult.id}
-                  className="flex items-center gap-3 text-sm"
-                >
+                <div key={adult.id} className="flex items-center gap-3 text-sm">
                   <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-100">
                     {adult.firstName.charAt(0).toUpperCase()}
                   </span>
@@ -207,22 +248,102 @@ export default function Payment() {
             <Button
               type="button"
               className="mt-5 w-full"
+              loading={isPaying}
+              disabled={isPaying}
               onClick={handleMakePayment}
             >
-              Make payment · ₹{totalFare.toLocaleString("en-IN")}
+              {isPaying
+                ? "Processing payment..."
+                : `Make payment · ₹${totalFare.toLocaleString("en-IN")}`}
             </Button>
-
-            {paymentMessage && (
+{/* 
+            {paymentError && (
               <p
-                role="status"
-                className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800"
+                role="alert"
+                className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700"
               >
-                {paymentMessage}
+                {paymentError}
               </p>
-            )}
+            )} */}
           </section>
         </div>
       </div>
+      {showSuccessModal && (
+        <Modal
+          onClose={() => setShowSuccessModal(false)}
+          className="fixed left-1/2 top-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2"
+        >
+          <div className="rounded-2xl bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-3xl text-emerald-600">
+              ✓
+            </div>
+
+            <h2 className="mt-4 text-xl font-bold">Payment successful!</h2>
+
+            <p className="mt-2 text-sm text-slate-600">
+              Your booking has been confirmed successfully.
+            </p>
+
+            <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm">
+              Booking reference: <strong>#{state.booking.id}</strong>
+            </p>
+
+            <p className="mt-3 text-xs text-slate-500">
+              A confirmation email will be sent to {state.contact?.email}.
+            </p>
+
+            <Button
+              type="button"
+              className="mt-5 w-full"
+              onClick={() => navigate("/flight-search")}
+            >
+              Back to flight search
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {paymentError && (
+        <Modal
+          onClose={() => setPaymentError("")}
+          className="fixed left-1/2 top-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2"
+        >
+          <div className="rounded-2xl bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-rose-100 text-3xl text-rose-600">
+              !
+            </div>
+
+            <h2 className="mt-4 text-xl font-bold text-slate-900">
+              Payment unsuccessful
+            </h2>
+
+            <p role="alert" className="mt-2 text-sm leading-6 text-slate-600">
+              {paymentError}
+            </p>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Your booking could not be confirmed. Please search for a flight
+              and try again.
+            </p>
+
+            <Button
+              type="button"
+              className="mt-5 w-full"
+              onClick={() => navigate("/flight-search", { replace: true })}
+            >
+              Book Another Flight
+            </Button>
+
+            <button
+              type="button"
+              className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-800"
+              onClick={() => setPaymentError("")}
+            >
+              Close
+            </button>
+          </div>
+        </Modal>
+      )}
     </main>
   );
 }
